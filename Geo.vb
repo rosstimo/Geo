@@ -9,6 +9,8 @@ Module Geo
   Const earthCircumferenceAtPoles As Double = 40007.863 'km
   Const pi as Double = Math.PI
   Dim points as new List(Of (longitude$, latitude$, altitude$, R$, G$, B$))
+  Dim maxPoint as (longitude$ , latitude$, altitude$, R$, G$, B$)
+  Dim minPoint as (longitude$ , latitude$, altitude$, R$, G$, B$)
 
   Sub Main(args As String())
     for each arg in args
@@ -24,6 +26,8 @@ Module Geo
     ReadFile("ranchPointAbsolute.txt")
     ' WritePoints()
     GetMaximum()
+    Console.WriteLine($"Max: {maxPoint.longitude} {maxPoint.latitude} {maxPoint.altitude} {maxPoint.R} {maxPoint.G} {maxPoint.B}")
+    Console.WriteLine($"Min: {minPoint.longitude} {minPoint.latitude} {minPoint.altitude} {minPoint.R} {minPoint.G} {minPoint.B}")
   End Sub
 
   'this function returns the distance in km around the earth from east to west at a given latitude and optinal altitude in km
@@ -91,9 +95,8 @@ Module Geo
     next
   End Sub
 
-  Function GetMaximum() as (longitude$ , latitude$, altitude$, R$, G$, B$) 
-    Dim maxPoint as (longitude$ , latitude$, altitude$, R$, G$, B$)
-    Dim minPoint as (longitude$ , latitude$, altitude$, R$, G$, B$)
+  'determine the max/min longitude, latitude and altitude to establish a boundry reference for reletive points in 3D space
+  Sub GetMaximum()
     Dim maxLongitude as Double = 0
     Dim minLongitude as Double = 360
     Dim maxLatitude as Double = 0
@@ -105,23 +108,33 @@ Module Geo
       If Math.Abs(CDbl(point.longitude)) > Math.Abs(maxLongitude) then
         maxLongitude = point.longitude
       End If
-      If CDbl(point.latitude) > maxLatitude then
+      If Math.Abs(CDbl(point.latitude)) > Math.Abs(maxLatitude) then
         maxLatitude = point.latitude
       End If
-      If CDbl(point.altitude) > maxAltitude then
+      If Math.Abs(CDbl(point.altitude)) > Math.Abs(maxAltitude) then
         maxAltitude = point.altitude
       End If
-      If Math.Abs(CDbl(point.longitude)) < MAth.Abs(minLongitude) then
+      If Math.Abs(CDbl(point.longitude)) < Math.Abs(minLongitude) then
         minLongitude = point.longitude
       End If
-      If CDbl(point.latitude) < minLatitude then
+      If Math.Abs(CDbl(point.latitude)) < Math.Abs(minLatitude) then
         minLatitude = point.latitude
       End If
-      If CDbl(point.altitude) < minAltitude then
+      If Math.Abs(CDbl(point.altitude)) < Math.Abs(minAltitude) then
         minAltitude = point.altitude
       End If
     Next
-    Console.WriteLine($"Max: {maxLongitude} {maxLatitude} {maxAltitude} {255} {255} {255}")
-    Console.WriteLine($"Min: {minLongitude} {minLatitude} {minAltitude} {255} {255} {255}")
-  End Function
+    maxPoint.longitude = CStr(maxLongitude)
+    maxPoint.latitude = CStr(maxLatitude)
+    maxPoint.altitude = CStr(maxAltitude)
+    maxPoint.R = "255"
+    maxPoint.G = "255"
+    maxPoint.B = "255"
+    minPoint.longitude = CStr(minLongitude)
+    minPoint.latitude = CStr(minLatitude)
+    minPoint.altitude = CStr(minAltitude)
+    minPoint.R = "0"
+    minPoint.G = "0"
+    minPoint.B = "0"
+  End Sub
 End Module
