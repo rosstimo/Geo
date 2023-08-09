@@ -1,7 +1,8 @@
 'Earth's circumference is the distance around Earth. 
 'Measured around the equator, it is 40,075.017 km (24,901.461 mi). 
 'Measured around the poles, the circumference is 40,007.863 km (24,859.734 mi).
-
+Option Strict On
+Option Explicit On
 Imports System
 
 Module Geo
@@ -9,32 +10,22 @@ Module Geo
   Const earthCircumferenceAtPoles As Double = 40007.863 'km
   Const pi as Double = Math.PI
   Dim points as new List(Of (longitude$, latitude$, altitude$, R$, G$, B$))
+  Dim relativePoints as new List(Of (x$, y$, z$, R$, G$, B$))
   Dim maxPoint as (longitude$ , latitude$, altitude$, R$, G$, B$)
   Dim minPoint as (longitude$ , latitude$, altitude$, R$, G$, B$)
 'define bounding box
   Dim mostWestSouthLowestPoint as (longitude$ , latitude$, altitude$, R$, G$, B$)
   Dim mostEastNorthHighestPoint as (longitude$ , latitude$, altitude$, R$, G$, B$)
  
-
   Sub Main(args As String())
     for each arg in args
       Console.WriteLine(arg)
     next
-    ' Console.WriteLine("Hello World!")
-    Console.WriteLine(CircumferenceAtLatitude(0,0))
-    Console.WriteLine(kmPerDegreeLongitudeAt(0,0))
-    Console.WriteLine(CircumferenceAtPoles(0))
-    Console.WriteLine(kmPerDegreeLatitude(0))
-    ' Console.WriteLine(Convert.Test())
-    ' Convert.ReadFileX()
-    ReadFile("ranchPointAbsolute.txt")
-    ' WritePoints()
+    ' ReadFile("ranchPointAbsolute.txt")
+    ReadFile(args(0))
     GetMaxMinPoints()
-    Console.WriteLine($"Max: {maxPoint.longitude} {maxPoint.latitude} {maxPoint.altitude} {maxPoint.R} {maxPoint.G} {maxPoint.B}")
-    Console.WriteLine($"Min: {minPoint.longitude} {minPoint.latitude} {minPoint.altitude} {minPoint.R} {minPoint.G} {minPoint.B}")
-    Console.WriteLine($"Max: {maxPoint.longitude} {maxPoint.latitude} {maxPoint.altitude} {maxPoint.R} {maxPoint.G} {maxPoint.B}")
-    Console.WriteLine($"Min: {minPoint.longitude} {minPoint.latitude} {minPoint.altitude} {minPoint.R} {minPoint.G} {minPoint.B}")
-    relativeDistanceBetween(mostEastNorthHighestPoint, mostWestSouthLowestPoint)
+    ConvertPointsToRelative()
+    WriteReletivePointsToFile()
   End Sub
 
   'this function returns the distance in km around the earth from east to west at a given latitude and optinal altitude in km
@@ -73,18 +64,12 @@ Module Geo
                                     referencePoint as (longitude$ , latitude$, altitude$, R$, G$, B$) _
                                   ) as (x$ , y$, z$, R$, G$, B$)
     Dim  relativePoint As (x$, y$, z$, R$, G$, B$)
-    relativePoint.x = CStr(((cDbl(currentPoint.longitude) - CDbl(referencePoint.longitude)) * kmPerDegreeLongitudeAt(referencePoint.latitude,referencePoint.altitude))*1000)
-    relativePoint.y = CStr(((CDbl(currentPoint.latitude) - CDbl(referencePoint.latitude)) * kmPerDegreeLatitude(referencePoint.altitude)) * 1000)
+    relativePoint.x = CStr(((cDbl(currentPoint.longitude) - CDbl(referencePoint.longitude)) * kmPerDegreeLongitudeAt(CDbl(referencePoint.latitude), CDbl(referencePoint.altitude)))*1000)
+    relativePoint.y = CStr(((CDbl(currentPoint.latitude) - CDbl(referencePoint.latitude)) * kmPerDegreeLatitude(CDbl(referencePoint.altitude))) * 1000)
     relativePoint.z = CStr(CDbl(currentPoint.altitude) - CDbl(referencePoint.altitude))   
     relativePoint.R = currentPoint.R
     relativePoint.G = currentPoint.G 
     relativePoint.B = currentPoint.B
-
-    Console.WriteLine($"{currentPoint.longitude} {currentPoint.latitude} {currentPoint.altitude}")
-    Console.WriteLine($"{referencePoint.longitude} {referencePoint.latitude} {referencePoint.altitude}")
-    Console.WriteLine(((cDbl(currentPoint.longitude) - CDbl(referencePoint.longitude)) * kmPerDegreeLongitudeAt(referencePoint.latitude,referencePoint.altitude))*1000)
-    Console.WriteLine(((CDbl(currentPoint.latitude) - CDbl(referencePoint.latitude)) * kmPerDegreeLatitude(referencePoint.altitude)) * 1000)
-    Console.WriteLine(currentPoint.altitude - referencePoint.altitude)
     return relativePoint 
   End Function
 
@@ -111,8 +96,6 @@ Module Geo
       Loop
       Catch fileNotFound As IO.FileNotFoundException
         Console.WriteLine("Sorry, that file doesn't exist")
-      ' Catch badFileNAme As IO.IOException
-      ' Console.WriteLine("oops")
       Catch ex As Exception
         Console.WriteLine("poops")
         Console.WriteLine(ex.Message) 
@@ -127,6 +110,12 @@ Module Geo
     next
   End Sub
 
+  Sub WriteReletivePoints()
+    for each point in relativePoints
+      Console.WriteLine($"{point.x} {point.y} {point.z} {point.R} {point.G} {point.B}")
+    Next
+  End Sub
+
   'determine the max/min longitude, latitude and altitude to establish a boundry reference for reletive points in 3D space
   'TODO this should probably be west most, sout most, lowest altitude to establish reletive origin point
   Sub GetMaxMinPoints()
@@ -139,22 +128,22 @@ Module Geo
 
     For each point in points
       If Math.Abs(CDbl(point.longitude)) > Math.Abs(maxLongitude) then
-        maxLongitude = point.longitude
+        maxLongitude = CDbl(point.longitude)
       End If
       If Math.Abs(CDbl(point.latitude)) > Math.Abs(maxLatitude) then
-        maxLatitude = point.latitude
+        maxLatitude = CDbl(point.latitude)
       End If
       If Math.Abs(CDbl(point.altitude)) > Math.Abs(maxAltitude) then
-        maxAltitude = point.altitude
+        maxAltitude = CDbl(point.altitude)
       End If
       If Math.Abs(CDbl(point.longitude)) < Math.Abs(minLongitude) then
-        minLongitude = point.longitude
+        minLongitude = CDbl(point.longitude)
       End If
       If Math.Abs(CDbl(point.latitude)) < Math.Abs(minLatitude) then
-        minLatitude = point.latitude
+        minLatitude = CDbl(point.latitude)
       End If
       If Math.Abs(CDbl(point.altitude)) < Math.Abs(minAltitude) then
-        minAltitude = point.altitude
+        minAltitude = CDbl(point.altitude)
       End If
     Next
     maxPoint.longitude = CStr(maxLongitude)
@@ -182,4 +171,45 @@ Module Geo
     mostEastNorthHighestPoint.G = "0"
     mostEastNorthHighestPoint.B = "0"
   End Sub
+
+  Sub ConvertPointsToRelative()
+    Dim relativePoint As (x$, y$, z$, R$, G$, B$)
+    Dim referencePoint As (longitude$, latitude$, altitude$, R$, G$, B$)
+    referencePoint = mostWestSouthLowestPoint
+    For each point in points
+      relativePoint = relativeDistanceBetween(point, referencePoint)
+      relativePoints.add(relativePoint)
+    Next
+  End Sub
+
+  Sub WriteReletivePointsToFile()
+    Dim fileNumber As Integer = FreeFile()
+    Dim temp As String 
+
+    Try
+      FileOpen(fileNumber, "reletivePointsMeters.txt", OpenMode.Output)
+      For each point in relativePoints
+        PrintLine(fileNumber, $"{point.x} {point.y} {point.z} {point.R} {point.G} {point.B}")
+      Next
+
+    Catch ex As Exception
+       Console.WriteLine("poops")
+       Console.WriteLine(ex.Message) 
+       Console.WriteLine(ex.StackTrace)
+    End Try
+    FileClose(fileNumber)
+    Try
+      FileOpen(fileNumber, "reletivePointsFeet.txt", OpenMode.Output)
+      For each point in relativePoints
+        PrintLine(fileNumber, $"{CDbl(point.x) * 3.28084} {CDbl(point.y) * 3.28084} {CDbl(point.z) * 3.28084} {point.R} {point.G} {point.B}")
+      Next
+
+    Catch ex As Exception
+       Console.WriteLine("poops")
+       Console.WriteLine(ex.Message) 
+       Console.WriteLine(ex.StackTrace)
+    End Try
+    FileClose(fileNumber)
+  End Sub
+
 End Module
